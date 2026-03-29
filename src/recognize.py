@@ -1,72 +1,72 @@
 import cv2
+import face_recognition
+import pickle
 import os
-from config import IMAGE_SIZE
 from src.attendance import mark_attendance
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-dataset_path = os.path.join(BASE_DIR, "Data", "dataset")
-model_path = os.path.join(BASE_DIR, "Data", "trainer", "model.xml")
-cascade_path = os.path.join(BASE_DIR, "models", "haarcascade_frontalface_default.xml")
+def run_recognition():
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    ENCODING_PATH = os.path.join(BASE_DIR, "..", "Data", "encoding", "encodings.pkl")
 
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-recognizer.read(model_path)
+    with open(ENCODING_PATH, "rb") as f:
+        data = pickle.load(f)
 
-face_cascade = cv2.CascadeClassifier(cascade_path)
+    video = cv2.VideoCapture(0)
 
-label_map = {}
-for idx, person_name in enumerate(sorted(os.listdir(dataset_path))):
-    label_map[idx] = person_name
+    frame_count = 0
+    cap_recent = set()
 
-print("label map:", label_map)
+    while True:
+        ret, frame = video.read()
+        if not ret:
+            continue
 
-cap = cv2.VideoCapture(0)
-marked = set()
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        rgb_small = cv2.cvtColor(small_frame, cv2.COLOR_BGR2RGB)
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+        frame_count += 1
+        if frame_count % 2 != 0:
+            cv2.imshow("Attendance System", frame)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                break
+            continue
 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        boxes = face_recognition.face_locations(rgb_small, model="hog")
+        encodings = face_recognition.face_encodings(rgb_small, boxes)
 
-    faces = face_cascade.detectMultiScale(
-        gray, scaleFactor=1.05, minNeighbors=7, minSize=(120, 120)
-    )
+        names = []
 
-    for (x, y, w, h) in faces:
-        face_crop = gray[y:y+h, x:x+w]
-        face_crop = cv2.resize(face_crop, IMAGE_SIZE)
+        for encoding in encodings:
+            distances = face_recognition.face_distance(data["encodings"], encoding)
+            name = "Unknown"
 
-        label, confidence = recognizer.predict(face_crop)
+            if len(distances) > 0:
+                match_index = distances.argmin()
 
-        if confidence < 70:
-            name = label_map.get(label, "Unknown")
+                if distances[match_index] < 0.5:
+                    name = data["names"][match_index]
 
-            if name not in marked:
-                mark_attendance(name)
-                marked.add(name)
+                    if name not in cap_recent:
+                        mark_attendance(name)
+                        cap_recent.add(name)
 
-            text = f"{name} ({confidence:.2f})"
-            color = (0, 255, 0)
-        else:
-            text = "Unknown"
-            color = (0, 0, 255)
+            names.append(name)
 
-        text_y = y - 10 if y - 10 > 20 else y + h + 30
+        for (top, right, bottom, left), name in zip(boxes, names):
+            top *= 4
+            right *= 4
+            bottom *= 4
+            left *= 4
 
-        cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
-        cv2.putText(frame, text, (x, text_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+            cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+            cv2.putText(frame, name, (left, top - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-    cv2.imshow("Recognition", frame)
+        cv2.imshow("Attendance System", frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
 
-cap.release()
-cv2.destroyAllWindows()
-
-
-def main():
-    pass
+    video.release()
+    cv2.destroyAllWindows()
