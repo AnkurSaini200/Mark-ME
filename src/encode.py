@@ -2,7 +2,6 @@ import face_recognition
 import os
 import pickle
 
-import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 

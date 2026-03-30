@@ -27,7 +27,6 @@ def mark_attendance(name):
         if row[0].value == name:
             found = True
 
-            # mark OUT
             if row[2].value is None:
                 row[2].value = time_now
                 wb.save(FILE_PATH)
@@ -37,7 +36,6 @@ def mark_attendance(name):
 
             return
 
-    # mark IN
     if not found:
         ws.append([name, time_now, None])
         wb.save(FILE_PATH)
