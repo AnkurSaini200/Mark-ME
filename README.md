@@ -206,13 +206,6 @@ python main.py
 
 ---
 
-## 📄 License
-
-This project is intended for educational and development purposes.
-Add a license if distributing publicly.
-
----
-
 ## 👨‍💻 Author
 
 Developed as part of a computer vision–based system design project.
