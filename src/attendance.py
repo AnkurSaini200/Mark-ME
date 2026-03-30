@@ -8,10 +8,7 @@ FILE_PATH = os.path.join(ATTENDANCE_DIR, "attendance.xlsx")
 
 
 def mark_attendance(name):
-    # ✅ ensure folder exists
     os.makedirs(ATTENDANCE_DIR, exist_ok=True)
-
-    # ✅ create file if not exists
     if not os.path.exists(FILE_PATH):
         wb = Workbook()
         ws = wb.active
