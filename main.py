@@ -1,5 +1,4 @@
 import os
-from src.attendance import mark_attendance
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DATASET_PATH = os.path.join(BASE_DIR, "..", "Data", "dataset")
