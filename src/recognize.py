@@ -2,6 +2,7 @@ import cv2
 import face_recognition
 import pickle
 import os
+
 from src.attendance import mark_attendance
 
 
@@ -9,10 +10,17 @@ def run_recognition():
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
     ENCODING_PATH = os.path.join(BASE_DIR, "..", "Data", "encoding", "encodings.pkl")
 
+    if not os.path.exists(ENCODING_PATH):
+        raise FileNotFoundError(f"Encodings file not found at {ENCODING_PATH}")
+
     with open(ENCODING_PATH, "rb") as f:
         data = pickle.load(f)
 
     video = cv2.VideoCapture(0)
+
+    if not video.isOpened():
+        print("Camera not accessible")
+        return
 
     frame_count = 0
     cap_recent = set()
