@@ -1,4 +1,4 @@
-# MARK-ME — Smart Attendance System
+# Mark-ME — Smart Attendance System
 
 A real-time attendance system powered by face recognition. This project automates attendance tracking using a webcam, eliminating manual processes and ensuring accuracy.
 
